@@ -5,10 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>深水埗 40 校網｜小一自行分配學位結果追蹤儀表板（2026 / 2027）</title>
 
+  <!-- SEO & Open Graph Meta Tags (方便 WhatsApp / Facebook / Threads 分享預覽) -->
+  <meta name="description" content="即時追蹤香港深水埗 40 校網官立及資助小學 2026 及 2027 年度小一自行分配學位取錄人數、超收情況、較去年變化（YoY）及預計統一派位（大抽獎）學額。" />
+  <meta property="og:title" content="深水埗 40 校網｜小一自行分配學位結果追蹤（2026 / 2027）" />
+  <meta property="og:description" content="一覽深水埗 40 校網 20 間官津小學自行收生結果、超收／剩餘學額對比及大抽獎學額估算，支援 Google Sheets 免爬蟲即時同步。" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="zh_HK" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="深水埗 40 校網｜小一自行分配學位結果追蹤（2026 / 2027）" />
+  <meta name="twitter:description" content="即時追蹤深水埗 40 校網小一自行分配學位取錄人數、超收變化及預計大抽獎學額。" />
+
+  <!-- Custom Inline SVG Favicon (深藍圓角方形 + 白色「40」) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231e3a5f'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' fill='%23ffffff' font-family='Inter, system-ui, sans-serif' font-weight='800' font-size='30'%3E40%3C/text%3E%3C/svg%3E" />
+
   <!-- Google Fonts: Inter & Noto Sans TC -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -44,137 +57,45 @@
 
 <body class="bg-[#f8fafc] text-slate-800 font-sans antialiased min-h-screen flex flex-col">
 
-  <!-- Toast Notification Container -->
+  <!-- Toast Notification Container (取代 alert) -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-[calc(100%-2.5rem)] pointer-events-none"></div>
 
   <!-- Top Navigation Bar -->
   <header class="bg-[#1e3a5f] text-white shadow-md sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center shrink-0 border border-white/20">
-          <svg class="w-6 h-6 text-sky-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-          </svg>
+        <div class="w-10 h-10 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center shrink-0 border border-white/20 font-extrabold text-lg tracking-tight text-white">
+          40
         </div>
         <div>
           <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-base sm:text-lg font-bold tracking-tight leading-snug">深水埗 40 校網｜小一自行分配學位追蹤</h1>
             <span id="dataSourceBadge" class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-sky-500/25 text-sky-100 border border-sky-300/30">
-              內建快照模式
+              最新整理資料
             </span>
           </div>
-          <p class="text-xs text-slate-300 hidden sm:block">2026 / 2027 年度官津小學取錄人數、超收及大抽獎學額分析</p>
+          <p class="text-xs text-slate-300 hidden sm:block">2026 / 2027 年度官津小學取錄人數、YoY 超收變化及大抽獎學額分析</p>
         </div>
       </div>
 
       <div class="flex items-center gap-2">
-        <button id="openSettingsBtn" type="button" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/25 text-sm font-medium transition border border-white/20 cursor-pointer">
-          <svg class="w-4 h-4 text-emerald-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+        <!-- Refresh Button (唯讀模式：訪客僅可重新載入最新資料) -->
+        <button id="refreshBtn" type="button" title="重新同步最新數據"
+          class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/25 text-sm font-medium transition border border-white/20 cursor-pointer">
+          <svg id="refreshIcon" class="w-4 h-4 text-sky-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span>連接 Google Sheets CSV</span>
+          <span class="hidden sm:inline">重新整理</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Google Sheets CSV Settings Modal -->
-  <div id="settingsModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-y-auto">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 my-auto">
-      <!-- Modal Header -->
-      <div class="bg-[#1e3a5f] text-white px-6 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <svg class="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-          </svg>
-          <h2 class="text-base sm:text-lg font-bold">連接 Google Sheets 公開 CSV（免爬蟲同步）</h2>
-        </div>
-        <button id="closeSettingsBtn" type="button" class="p-1.5 rounded-lg hover:bg-white/15 transition cursor-pointer" aria-label="關閉">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <!-- Modal Body -->
-      <div class="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
-        <!-- 3-Step Guide -->
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700">
-          <p class="font-semibold text-[#1e3a5f] mb-2 flex items-center gap-1.5">
-            <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            3 步取得 Google Sheets 公開 CSV 連結：
-          </p>
-          <ol class="list-decimal list-inside space-y-1 text-xs sm:text-sm text-slate-600">
-            <li>打開你的 Google Sheets，點選左上角 <strong class="text-slate-800">檔案 &gt; 共用 &gt; 發佈到網路</strong>。</li>
-            <li>選擇指定工作表（如 <code class="bg-slate-200/80 px-1.5 py-0.5 rounded text-slate-800">SSP_40_2027</code> 或 <code class="bg-slate-200/80 px-1.5 py-0.5 rounded text-slate-800">SSP_40_2026</code>），格式選擇 <strong class="text-slate-800">逗號分隔值 (.csv)</strong>。</li>
-            <li>點擊「發佈」並複製產生的連結，貼入下方欄位再按「立即同步最新數據」。</li>
-          </ol>
-        </div>
-
-        <!-- CSV URL Inputs -->
-        <div class="space-y-4">
-          <div>
-            <label for="csvUrl2027" class="block text-sm font-semibold text-slate-700 mb-1.5">
-              2027 年度工作表 CSV 連結（<code class="text-xs font-normal text-slate-500">SSP_40_2027</code>）
-            </label>
-            <input id="csvUrl2027" type="url" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?gid=...&single=true&output=csv"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a5f] focus:border-[#1e3a5f] transition" />
-          </div>
-
-          <div>
-            <label for="csvUrl2026" class="block text-sm font-semibold text-slate-700 mb-1.5">
-              2026 年度工作表 CSV 連結（<code class="text-xs font-normal text-slate-500">SSP_40_2026</code>，選填）
-            </label>
-            <input id="csvUrl2026" type="url" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?gid=...&single=true&output=csv"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a5f] focus:border-[#1e3a5f] transition" />
-          </div>
-        </div>
-
-        <!-- Verified Filter Option -->
-        <div class="flex items-center justify-between bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-          <div>
-            <p class="text-sm font-semibold text-slate-800">僅顯示已核實資料（隱藏未公布）</p>
-            <p class="text-xs text-slate-500">預設會同時顯示已核實（<code class="text-slate-700">verified=TRUE</code>）及未公布學校；開啟後將只列出已核實學校。</p>
-          </div>
-          <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
-            <input id="verifiedOnlyToggle" type="checkbox" class="sr-only peer" />
-            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1e3a5f] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1e3a5f]"></div>
-          </label>
-        </div>
-
-        <!-- Sync Status Message -->
-        <div id="syncStatusBox" class="hidden rounded-xl p-3 text-sm"></div>
-      </div>
-
-      <!-- Modal Footer -->
-      <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
-        <button id="resetSnapshotBtn" type="button" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 transition cursor-pointer">
-          重設為內建快照
-        </button>
-        <div class="flex items-center gap-2.5">
-          <button id="cancelSettingsBtn" type="button" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 border border-slate-300 bg-white hover:bg-slate-50 transition cursor-pointer">
-            取消
-          </button>
-          <button id="syncCsvBtn" type="button" class="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white bg-[#1e3a5f] hover:bg-[#162c49] transition shadow-sm cursor-pointer">
-            <svg id="syncSpinner" class="w-4 h-4 animate-spin hidden" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-            <span>立即同步最新數據</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Main Content -->
   <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 flex-1">
 
-    <!-- Year Switcher Tabs & Quick Actions -->
-    <section class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <!-- Year Switcher Tabs & Real-time Sync Status Bar -->
+    <section class="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div class="inline-flex p-1 bg-slate-200/80 rounded-2xl self-start">
         <button id="tab2027" type="button" data-year="2027"
           class="year-tab px-5 py-2.5 rounded-xl text-sm font-bold transition cursor-pointer bg-[#1e3a5f] text-white shadow-sm">
@@ -186,11 +107,12 @@
         </button>
       </div>
 
-      <div class="flex items-center gap-3 text-xs text-slate-500">
-        <span id="lastSyncInfo" class="inline-flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs">
-          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-          資料來源：內建快照（2026-11-23）
-        </span>
+      <!-- Real-time Sync Status Bar -->
+      <div id="syncStatusBar" class="inline-flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-xs text-xs text-slate-600 self-start md:self-auto">
+        <span id="syncDot" class="w-2.5 h-2.5 rounded-full bg-sky-500 shrink-0"></span>
+        <span id="syncStatusText" class="font-medium">目前顯示最新整理資料</span>
+        <span class="text-slate-300">|</span>
+        <span id="lastSyncTime" class="text-slate-500">資料最後更新：--</span>
       </div>
     </section>
 
@@ -232,7 +154,7 @@
           <span id="kpiOver" class="text-2xl sm:text-3xl font-bold text-rose-600">0</span>
           <span class="text-xs text-slate-500">間（蠶食大抽獎額）</span>
         </div>
-        <p id="kpiOverSub" class="text-xs text-slate-500 mt-2">總超收人數：0 人</p>
+        <p id="kpiOverSub" class="text-xs text-slate-500 mt-2">總超收人數：+0 人</p>
       </div>
 
       <!-- Card 3: Full -->
@@ -249,7 +171,7 @@
           <span id="kpiFull" class="text-2xl sm:text-3xl font-bold text-indigo-600">0</span>
           <span class="text-xs text-slate-500">間（0 差額）</span>
         </div>
-        <p class="text-xs text-slate-500 mt-2">收足暫定自行學額</p>
+        <p class="text-xs text-slate-500 mt-2">剛好收足暫定自行學額</p>
       </div>
 
       <!-- Card 4: Surplus -->
@@ -275,7 +197,7 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div>
           <h2 class="text-base sm:text-lg font-bold text-[#1e3a5f]">已公布學校收生視覺化分析</h2>
-          <p class="text-xs text-slate-500 mt-0.5">只顯示已公布實際取錄人數的學校，點擊右上角可切換檢視模式</p>
+          <p class="text-xs text-slate-500 mt-0.5">只顯示已公布實際取錄人數的學校，可切換超收差額或預計統一派位學額</p>
         </div>
 
         <!-- Chart Mode Toggle -->
@@ -284,18 +206,18 @@
             class="chart-mode-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer bg-white text-[#1e3a5f] shadow-xs">
             超收／剩餘學額 (diff)
           </button>
-          <button id="chartModeCompare" type="button" data-mode="compare"
+          <button id="chartModeCA" type="button" data-mode="ca"
             class="chart-mode-btn px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer text-slate-600 hover:text-slate-900">
-            暫定學額 vs 實際取錄
+            預計統一派位學額 (大抽獎)
           </button>
         </div>
       </div>
 
-      <!-- Legend Pills for Diff Mode -->
-      <div id="diffLegend" class="flex flex-wrap items-center gap-4 text-xs text-slate-600 mb-3">
-        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-rose-500"></span>超收（正數，蠶食統一派位）</span>
+      <!-- Color Legend -->
+      <div class="flex flex-wrap items-center gap-4 text-xs text-slate-600 mb-3">
+        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-rose-500"></span>超收（蠶食統一派位）</span>
         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-indigo-500"></span>滿額（0 差額）</span>
-        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-emerald-500"></span>有餘額（負數，撥回統一派位）</span>
+        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-emerald-500"></span>有餘額（撥回統一派位）</span>
       </div>
 
       <div id="chartWrapper" class="relative w-full" style="height: 360px;">
@@ -314,7 +236,7 @@
           <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <input id="searchInput" type="text" placeholder="搜尋學校名稱或直屬／聯繫中學..."
+          <input id="searchInput" type="text" placeholder="搜尋學校名稱、編號或直屬／聯繫中學..."
             class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a5f] focus:border-[#1e3a5f] transition" />
         </div>
 
@@ -349,19 +271,29 @@
         </div>
       </div>
 
-      <!-- Sort & Result Count Bar -->
-      <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
-        <p class="text-xs sm:text-sm text-slate-600">
-          顯示 <strong id="resultCount" class="text-[#1e3a5f]">0</strong> 間學校
-        </p>
+      <!-- Verified Toggle, Sort & Result Count Bar -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+        <div class="flex flex-wrap items-center gap-4">
+          <p class="text-xs sm:text-sm text-slate-600">
+            顯示 <strong id="resultCount" class="text-[#1e3a5f]">0</strong> 間學校
+          </p>
+
+          <!-- Verified-Only Inline Toggle -->
+          <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+            <input id="verifiedOnlyToggle" type="checkbox" class="sr-only peer" />
+            <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1e3a5f] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 relative"></div>
+            <span class="text-xs sm:text-sm font-medium text-slate-700">僅顯示已核實</span>
+          </label>
+        </div>
 
         <div class="flex items-center gap-2">
           <label for="sortSelect" class="text-xs font-medium text-slate-500">排序方式：</label>
           <select id="sortSelect" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1e3a5f] cursor-pointer">
-            <option value="id_asc">預設編號</option>
+            <option value="announced_first">預設（已公布優先）</option>
             <option value="diff_desc">超收最多（由高至低）</option>
-            <option value="diff_asc">餘額最多（由低至高）</option>
-            <option value="ca_desc">預計大抽獎學額最多</option>
+            <option value="diff_asc">剩餘學額最多（由低至高）</option>
+            <option value="ca_desc">大抽獎學額最多</option>
+            <option value="id_asc">學校編號順序</option>
           </select>
         </div>
       </div>
@@ -381,9 +313,10 @@
                 <th class="py-3.5 px-3 text-right">暫定自行</th>
                 <th class="py-3.5 px-3 text-right">實際取錄</th>
                 <th class="py-3.5 px-3 text-center">超收／剩餘</th>
+                <th id="yoyColHeader" class="py-3.5 px-3 text-center">較去年變化</th>
                 <th class="py-3.5 px-3 text-right">預計大抽獎</th>
                 <th class="py-3.5 px-3 text-center">狀態</th>
-                <th class="py-3.5 px-4 text-right">來源／更新</th>
+                <th class="py-3.5 px-4 text-right">資料來源</th>
               </tr>
             </thead>
             <tbody id="desktopTableBody" class="divide-y divide-slate-100 text-sm">
@@ -421,111 +354,92 @@
   <!-- Application Script -->
   <script>
     // =========================================================================
-    // 1. BUILT-IN SNAPSHOT DATA (2027 & 2026)
+    // 0. APP CONFIGURATION (唯讀設定：僅由管理員於程式碼內維護，訪客無法修改)
     // =========================================================================
-    const DEFAULT_DATA_2027 = [
-      {"school_id":4001,"school_name":"中華基督教會協和小學（長沙灣）","type":"資助","religion":"基督教","linked_sec":"","total_quota":150,"dp_quota":75,"dp_admitted":75,"diff":0,"ca_estimated":75,"status":"滿額","source_type":"官網PDF","source_url":"","last_updated":"2026-11-23","verified":true},
-      {"school_id":4002,"school_name":"聖公會聖紀文小學","type":"資助","religion":"基督教","linked_sec":"","total_quota":120,"dp_quota":60,"dp_admitted":60,"diff":0,"ca_estimated":60,"status":"滿額","source_type":"官網PDF","source_url":"https://www.stheadline.com/ohpama/3640123","last_updated":"2026-11-23","verified":true},
-      {"school_id":4003,"school_name":"荔枝角天主教小學","type":"資助","religion":"天主教","linked_sec":"","total_quota":150,"dp_quota":75,"dp_admitted":75,"diff":0,"ca_estimated":75,"status":"滿額","source_type":"官網PDF","source_url":"","last_updated":"2026-11-23","verified":true},
-      {"school_id":4004,"school_name":"瑪利諾神父教會學校（小學部）","type":"資助","religion":"天主教","linked_sec":"直屬：瑪利諾神父教會學校","total_quota":100,"dp_quota":50,"dp_admitted":50,"diff":0,"ca_estimated":50,"status":"滿額","source_type":"官網PDF","source_url":"","last_updated":"2026-11-23","verified":true},
-      {"school_id":4005,"school_name":"聖方濟愛德小學","type":"資助","religion":"天主教","linked_sec":"","total_quota":120,"dp_quota":60,"dp_admitted":60,"diff":0,"ca_estimated":60,"status":"滿額","source_type":"官網PDF","source_url":"","last_updated":"2026-11-23","verified":true},
-      {"school_id":4006,"school_name":"聖公會基福小學","type":"資助","religion":"基督教","linked_sec":"","total_quota":180,"dp_quota":90,"dp_admitted":90,"diff":0,"ca_estimated":90,"status":"滿額","source_type":"官網PDF","source_url":"","last_updated":"2026-11-23","verified":true},
-      {"school_id":4007,"school_name":"聖公會聖安德烈小學","type":"資助","religion":"基督教","linked_sec":"","total_quota":180,"dp_quota":90,"dp_admitted":65,"diff":-25,"ca_estimated":115,"status":"有餘額","source_type":"官網PDF","source_url":"","last_updated":"2026-11-23","verified":true},
-      {"school_id":4008,"school_name":"長沙灣天主教小學","type":"資助","religion":"天主教","linked_sec":"","total_quota":125,"dp_quota":63,"dp_admitted":63,"diff":0,"ca_estimated":62,"status":"滿額","source_type":"官網PDF","source_url":"","last_updated":"2026-11-23","verified":true},
-      {"school_id":4009,"school_name":"寶血會嘉靈學校","type":"資助","religion":"天主教","linked_sec":"","total_quota":150,"dp_quota":75,"dp_admitted":null,"diff":null,"ca_estimated":null,"status":"未公布","source_type":"","source_url":"","last_updated":"","verified":false},
-      {"school_id":4010,"school_name":"聖公會聖多馬小學","type":"資助","religion":"基督教","linked_sec":"","total_quota":90,"dp_quota":45,"dp_admitted":45,"diff":0,"ca_estimated":45,"status":"滿額","source_type":"官網PDF","source_url":"","last_updated":"2026-11-23","verified":true},
-      {"school_id":4011,"school_name":"大坑東宣道小學","type":"資助","religion":"基督教","linked_sec":"","total_quota":120,"dp_quota":60,"dp_admitted":null,"diff":null,"ca_estimated":null,"status":"未公布","source_type":"","source_url":"","last_updated":"","verified":false},
-      {"school_id":4012,"school_name":"天主教善導小學","type":"資助","religion":"天主教","linked_sec":"","total_quota":100,"dp_quota":50,"dp_admitted":null,"diff":null,"ca_estimated":null,"status":"未公布","source_type":"","source_url":"","last_updated":"","verified":false},
-      {"school_id":4013,"school_name":"聖公會基愛小學","type":"資助","religion":"基督教","linked_sec":"","total_quota":125,"dp_quota":63,"dp_admitted":36,"diff":-27,"ca_estimated":89,"status":"有餘額","source_type":"官網PDF","source_url":"","last_updated":"2026-11-23","verified":true},
-      {"school_id":4014,"school_name":"旅港開平商會學校","type":"資助","religion":"無","linked_sec":"","total_quota":100,"dp_quota":50,"dp_admitted":50,"diff":0,"ca_estimated":50,"status":"滿額","source_type":"官網PDF","source_url":"","last_updated":"2026-11-23","verified":true},
-      {"school_id":4015,"school_name":"郭怡雅神父紀念學校","type":"資助","religion":"天主教","linked_sec":"","total_quota":125,"dp_quota":63,"dp_admitted":null,"diff":null,"ca_estimated":null,"status":"未公布","source_type":"","source_url":"","last_updated":"","verified":false},
-      {"school_id":4016,"school_name":"深信學校","type":"資助","religion":"基督教","linked_sec":"","total_quota":50,"dp_quota":25,"dp_admitted":null,"diff":null,"ca_estimated":null,"status":"未公布","source_type":"","source_url":"","last_updated":"","verified":false},
-      {"school_id":4017,"school_name":"福榮街官立小學","type":"官立","religion":"無","linked_sec":"聯繫官中","total_quota":100,"dp_quota":50,"dp_admitted":28,"diff":-22,"ca_estimated":72,"status":"有餘額","source_type":"官網PDF","source_url":"","last_updated":"2026-11-23","verified":true},
-      {"school_id":4018,"school_name":"李鄭屋官立小學","type":"官立","religion":"無","linked_sec":"聯繫官中","total_quota":null,"dp_quota":null,"dp_admitted":null,"diff":null,"ca_estimated":null,"status":"未公布","source_type":"","source_url":"","last_updated":"","verified":false},
-      {"school_id":4019,"school_name":"深水埗官立小學","type":"官立","religion":"無","linked_sec":"聯繫官中","total_quota":125,"dp_quota":63,"dp_admitted":null,"diff":null,"ca_estimated":null,"status":"未公布","source_type":"","source_url":"","last_updated":"","verified":false},
-      {"school_id":4020,"school_name":"五邑工商總會學校","type":"資助","religion":"無","linked_sec":"","total_quota":null,"dp_quota":null,"dp_admitted":null,"diff":null,"ca_estimated":null,"status":"未公布","source_type":"","source_url":"","last_updated":"","verified":false}
-    ];
-
-    const DEFAULT_DATA_2026 = [
-      {"school_id":4001,"school_name":"中華基督教會協和小學（長沙灣）","type":"資助","religion":"基督教","linked_sec":"","total_quota":150,"dp_quota":75,"dp_admitted":84,"diff":9,"ca_estimated":66,"status":"超收","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4002,"school_name":"聖公會聖紀文小學","type":"資助","religion":"基督教","linked_sec":"","total_quota":150,"dp_quota":75,"dp_admitted":79,"diff":4,"ca_estimated":71,"status":"超收","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4003,"school_name":"荔枝角天主教小學","type":"資助","religion":"天主教","linked_sec":"","total_quota":150,"dp_quota":75,"dp_admitted":79,"diff":4,"ca_estimated":71,"status":"超收","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4004,"school_name":"瑪利諾神父教會學校（小學部）","type":"資助","religion":"天主教","linked_sec":"直屬：瑪利諾神父教會學校","total_quota":100,"dp_quota":50,"dp_admitted":53,"diff":3,"ca_estimated":47,"status":"超收","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4005,"school_name":"聖方濟愛德小學","type":"資助","religion":"天主教","linked_sec":"","total_quota":120,"dp_quota":60,"dp_admitted":64,"diff":4,"ca_estimated":56,"status":"超收","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4006,"school_name":"聖公會基福小學","type":"資助","religion":"基督教","linked_sec":"","total_quota":180,"dp_quota":90,"dp_admitted":95,"diff":5,"ca_estimated":85,"status":"超收","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4007,"school_name":"聖公會聖安德烈小學","type":"資助","religion":"基督教","linked_sec":"","total_quota":180,"dp_quota":90,"dp_admitted":90,"diff":0,"ca_estimated":90,"status":"滿額","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4008,"school_name":"長沙灣天主教小學","type":"資助","religion":"天主教","linked_sec":"","total_quota":125,"dp_quota":63,"dp_admitted":65,"diff":2,"ca_estimated":60,"status":"超收","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4009,"school_name":"寶血會嘉靈學校","type":"資助","religion":"天主教","linked_sec":"","total_quota":150,"dp_quota":75,"dp_admitted":76,"diff":1,"ca_estimated":74,"status":"超收","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4010,"school_name":"聖公會聖多馬小學","type":"資助","religion":"基督教","linked_sec":"","total_quota":90,"dp_quota":45,"dp_admitted":47,"diff":2,"ca_estimated":43,"status":"超收","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4011,"school_name":"大坑東宣道小學","type":"資助","religion":"基督教","linked_sec":"","total_quota":120,"dp_quota":60,"dp_admitted":31,"diff":-29,"ca_estimated":89,"status":"有餘額","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4012,"school_name":"天主教善導小學","type":"資助","religion":"天主教","linked_sec":"","total_quota":100,"dp_quota":50,"dp_admitted":21,"diff":-29,"ca_estimated":79,"status":"有餘額","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4013,"school_name":"聖公會基愛小學","type":"資助","religion":"基督教","linked_sec":"","total_quota":125,"dp_quota":63,"dp_admitted":37,"diff":-26,"ca_estimated":88,"status":"有餘額","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4014,"school_name":"旅港開平商會學校","type":"資助","religion":"無","linked_sec":"","total_quota":100,"dp_quota":50,"dp_admitted":53,"diff":3,"ca_estimated":47,"status":"超收","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4015,"school_name":"郭怡雅神父紀念學校","type":"資助","religion":"天主教","linked_sec":"","total_quota":125,"dp_quota":63,"dp_admitted":34,"diff":-29,"ca_estimated":91,"status":"有餘額","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4016,"school_name":"深信學校","type":"資助","religion":"基督教","linked_sec":"","total_quota":50,"dp_quota":25,"dp_admitted":17,"diff":-8,"ca_estimated":33,"status":"有餘額","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4017,"school_name":"福榮街官立小學","type":"官立","religion":"無","linked_sec":"聯繫官中","total_quota":100,"dp_quota":50,"dp_admitted":30,"diff":-20,"ca_estimated":70,"status":"有餘額","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4018,"school_name":"李鄭屋官立小學","type":"官立","religion":"無","linked_sec":"聯繫官中","total_quota":100,"dp_quota":50,"dp_admitted":52,"diff":2,"ca_estimated":48,"status":"超收","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4019,"school_name":"深水埗官立小學","type":"官立","religion":"無","linked_sec":"聯繫官中","total_quota":125,"dp_quota":63,"dp_admitted":17,"diff":-46,"ca_estimated":108,"status":"有餘額","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true},
-      {"school_id":4020,"school_name":"五邑工商總會學校","type":"資助","religion":"無","linked_sec":"","total_quota":75,"dp_quota":38,"dp_admitted":9,"diff":-29,"ca_estimated":66,"status":"有餘額","source_type":"傳媒報道","source_url":"https://topschool.hket.com/article/4042295","last_updated":"2026-01-15","verified":true}
-    ];
-
-    // =========================================================================
-    // 2. APPLICATION STATE & STORAGE KEYS
-    // =========================================================================
-    const STORAGE_KEYS = {
-      url2027: 'ssp40_csv_url_2027',
-      url2026: 'ssp40_csv_url_2026',
-      verifiedOnly: 'ssp40_verified_only'
+    const APP_CONFIG = {
+      // 貼上 Google Sheets「發佈到網路 (.csv)」連結，所有訪客打開即自動唯讀同步
+      DEFAULT_CSV_2027: '',
+      DEFAULT_CSV_2026: ''
     };
 
+    // =========================================================================
+    // 1. BUILT-IN DATA (2027 & 2026 預設整理資料)
+    // =========================================================================
+    const DEFAULT_DATA_2026 = [
+      { school_id: '4001', school_name: '中華基督教會協和小學（長沙灣）', type: '資助', religion: '基督教', linked_sec: '', total_quota: 150, dp_quota: 75, dp_admitted: 84, diff: 9, ca_estimated: 66, status: '超收', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4002', school_name: '聖公會聖紀文小學', type: '資助', religion: '基督教', linked_sec: '', total_quota: 150, dp_quota: 75, dp_admitted: 79, diff: 4, ca_estimated: 71, status: '超收', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4003', school_name: '荔枝角天主教小學', type: '資助', religion: '天主教', linked_sec: '', total_quota: 150, dp_quota: 75, dp_admitted: 79, diff: 4, ca_estimated: 71, status: '超收', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4004', school_name: '瑪利諾神父教會學校（小學部）', type: '資助', religion: '天主教', linked_sec: '直屬：瑪利諾神父教會學校', total_quota: 100, dp_quota: 50, dp_admitted: 53, diff: 3, ca_estimated: 47, status: '超收', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4005', school_name: '聖方濟愛德小學', type: '資助', religion: '天主教', linked_sec: '', total_quota: 120, dp_quota: 60, dp_admitted: 64, diff: 4, ca_estimated: 56, status: '超收', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4006', school_name: '聖公會基福小學', type: '資助', religion: '基督教', linked_sec: '', total_quota: 180, dp_quota: 90, dp_admitted: 95, diff: 5, ca_estimated: 85, status: '超收', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4007', school_name: '聖公會聖安德烈小學', type: '資助', religion: '基督教', linked_sec: '', total_quota: 180, dp_quota: 90, dp_admitted: 90, diff: 0, ca_estimated: 90, status: '滿額', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4008', school_name: '長沙灣天主教小學', type: '資助', religion: '天主教', linked_sec: '', total_quota: 125, dp_quota: 63, dp_admitted: 65, diff: 2, ca_estimated: 60, status: '超收', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4009', school_name: '寶血會嘉靈學校', type: '資助', religion: '天主教', linked_sec: '', total_quota: 150, dp_quota: 75, dp_admitted: 76, diff: 1, ca_estimated: 74, status: '超收', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4010', school_name: '聖公會聖多馬小學', type: '資助', religion: '基督教', linked_sec: '', total_quota: 90, dp_quota: 45, dp_admitted: 47, diff: 2, ca_estimated: 43, status: '超收', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4011', school_name: '大坑東宣道小學', type: '資助', religion: '基督教', linked_sec: '', total_quota: 120, dp_quota: 60, dp_admitted: 31, diff: -29, ca_estimated: 89, status: '有餘額', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4012', school_name: '天主教善導小學', type: '資助', religion: '天主教', linked_sec: '', total_quota: 100, dp_quota: 50, dp_admitted: 21, diff: -29, ca_estimated: 79, status: '有餘額', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4013', school_name: '聖公會基愛小學', type: '資助', religion: '基督教', linked_sec: '', total_quota: 125, dp_quota: 63, dp_admitted: 37, diff: -26, ca_estimated: 88, status: '有餘額', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4014', school_name: '旅港開平商會學校', type: '資助', religion: '無', linked_sec: '', total_quota: 100, dp_quota: 50, dp_admitted: 53, diff: 3, ca_estimated: 47, status: '超收', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4015', school_name: '郭怡雅神父紀念學校', type: '資助', religion: '天主教', linked_sec: '', total_quota: 125, dp_quota: 63, dp_admitted: 34, diff: -29, ca_estimated: 91, status: '有餘額', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4016', school_name: '深信學校', type: '資助', religion: '基督教', linked_sec: '', total_quota: 50, dp_quota: 25, dp_admitted: 17, diff: -8, ca_estimated: 33, status: '有餘額', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4017', school_name: '福榮街官立小學', type: '官立', religion: '無', linked_sec: '聯繫官中', total_quota: 100, dp_quota: 50, dp_admitted: 30, diff: -20, ca_estimated: 70, status: '有餘額', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4018', school_name: '李鄭屋官立小學', type: '官立', religion: '無', linked_sec: '聯繫官中', total_quota: 100, dp_quota: 50, dp_admitted: 52, diff: 2, ca_estimated: 48, status: '超收', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4019', school_name: '深水埗官立小學', type: '官立', religion: '無', linked_sec: '聯繫官中', total_quota: 125, dp_quota: 63, dp_admitted: 17, diff: -46, ca_estimated: 108, status: '有餘額', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true },
+      { school_id: '4020', school_name: '五邑工商總會學校', type: '資助', religion: '無', linked_sec: '', total_quota: 75, dp_quota: 38, dp_admitted: 9, diff: -29, ca_estimated: 66, status: '有餘額', source_type: '傳媒報道', source_url: 'https://topschool.hket.com/article/4042295', last_updated: '2026-01-15', verified: true }
+    ];
+
+    const DEFAULT_DATA_2027 = [
+      { school_id: '4001', school_name: '中華基督教會協和小學（長沙灣）', type: '資助', religion: '基督教', linked_sec: '', total_quota: 150, dp_quota: 75, dp_admitted: 75, diff: 0, ca_estimated: 75, status: '滿額', source_type: '官網PDF', source_url: '', last_updated: '2026-11-23', verified: true },
+      { school_id: '4002', school_name: '聖公會聖紀文小學', type: '資助', religion: '基督教', linked_sec: '', total_quota: 120, dp_quota: 60, dp_admitted: 60, diff: 0, ca_estimated: 60, status: '滿額', source_type: '官網PDF', source_url: 'https://www.stheadline.com/ohpama/3640123', last_updated: '2026-11-23', verified: true },
+      { school_id: '4003', school_name: '荔枝角天主教小學', type: '資助', religion: '天主教', linked_sec: '', total_quota: 150, dp_quota: 75, dp_admitted: 75, diff: 0, ca_estimated: 75, status: '滿額', source_type: '官網PDF', source_url: '', last_updated: '2026-11-23', verified: true },
+      { school_id: '4004', school_name: '瑪利諾神父教會學校（小學部）', type: '資助', religion: '天主教', linked_sec: '直屬：瑪利諾神父教會學校', total_quota: 100, dp_quota: 50, dp_admitted: 50, diff: 0, ca_estimated: 50, status: '滿額', source_type: '官網PDF', source_url: '', last_updated: '2026-11-23', verified: true },
+      { school_id: '4005', school_name: '聖方濟愛德小學', type: '資助', religion: '天主教', linked_sec: '', total_quota: 120, dp_quota: 60, dp_admitted: 60, diff: 0, ca_estimated: 60, status: '滿額', source_type: '官網PDF', source_url: '', last_updated: '2026-11-23', verified: true },
+      { school_id: '4006', school_name: '聖公會基福小學', type: '資助', religion: '基督教', linked_sec: '', total_quota: 180, dp_quota: 90, dp_admitted: 90, diff: 0, ca_estimated: 90, status: '滿額', source_type: '官網PDF', source_url: '', last_updated: '2026-11-23', verified: true },
+      { school_id: '4007', school_name: '聖公會聖安德烈小學', type: '資助', religion: '基督教', linked_sec: '', total_quota: 180, dp_quota: 90, dp_admitted: 65, diff: -25, ca_estimated: 115, status: '有餘額', source_type: '官網PDF', source_url: '', last_updated: '2026-11-23', verified: true },
+      { school_id: '4008', school_name: '長沙灣天主教小學', type: '資助', religion: '天主教', linked_sec: '', total_quota: 125, dp_quota: 63, dp_admitted: 63, diff: 0, ca_estimated: 62, status: '滿額', source_type: '官網PDF', source_url: '', last_updated: '2026-11-23', verified: true },
+      { school_id: '4009', school_name: '寶血會嘉靈學校', type: '資助', religion: '天主教', linked_sec: '', total_quota: 150, dp_quota: 75, dp_admitted: null, diff: null, ca_estimated: null, status: '未公布', source_type: '', source_url: '', last_updated: '', verified: false },
+      { school_id: '4010', school_name: '聖公會聖多馬小學', type: '資助', religion: '基督教', linked_sec: '', total_quota: 90, dp_quota: 45, dp_admitted: 45, diff: 0, ca_estimated: 45, status: '滿額', source_type: '官網PDF', source_url: '', last_updated: '2026-11-23', verified: true },
+      { school_id: '4011', school_name: '大坑東宣道小學', type: '資助', religion: '基督教', linked_sec: '', total_quota: 120, dp_quota: 60, dp_admitted: null, diff: null, ca_estimated: null, status: '未公布', source_type: '', source_url: '', last_updated: '', verified: false },
+      { school_id: '4012', school_name: '天主教善導小學', type: '資助', religion: '天主教', linked_sec: '', total_quota: 100, dp_quota: 50, dp_admitted: null, diff: null, ca_estimated: null, status: '未公布', source_type: '', source_url: '', last_updated: '', verified: false },
+      { school_id: '4013', school_name: '聖公會基愛小學', type: '資助', religion: '基督教', linked_sec: '', total_quota: 125, dp_quota: 63, dp_admitted: 36, diff: -27, ca_estimated: 89, status: '有餘額', source_type: '官網PDF', source_url: '', last_updated: '2026-11-23', verified: true },
+      { school_id: '4014', school_name: '旅港開平商會學校', type: '資助', religion: '無', linked_sec: '', total_quota: 100, dp_quota: 50, dp_admitted: 50, diff: 0, ca_estimated: 50, status: '滿額', source_type: '官網PDF', source_url: '', last_updated: '2026-11-23', verified: true },
+      { school_id: '4015', school_name: '郭怡雅神父紀念學校', type: '資助', religion: '天主教', linked_sec: '', total_quota: 125, dp_quota: 63, dp_admitted: null, diff: null, ca_estimated: null, status: '未公布', source_type: '', source_url: '', last_updated: '', verified: false },
+      { school_id: '4016', school_name: '深信學校', type: '資助', religion: '基督教', linked_sec: '', total_quota: 50, dp_quota: 25, dp_admitted: null, diff: null, ca_estimated: null, status: '未公布', source_type: '', source_url: '', last_updated: '', verified: false },
+      { school_id: '4017', school_name: '福榮街官立小學', type: '官立', religion: '無', linked_sec: '聯繫官中', total_quota: 100, dp_quota: 50, dp_admitted: 28, diff: -22, ca_estimated: 72, status: '有餘額', source_type: '官網PDF', source_url: '', last_updated: '2026-11-23', verified: true },
+      { school_id: '4018', school_name: '李鄭屋官立小學', type: '官立', religion: '無', linked_sec: '聯繫官中', total_quota: null, dp_quota: null, dp_admitted: null, diff: null, ca_estimated: null, status: '未公布', source_type: '', source_url: '', last_updated: '', verified: false },
+      { school_id: '4019', school_name: '深水埗官立小學', type: '官立', religion: '無', linked_sec: '聯繫官中', total_quota: 125, dp_quota: 63, dp_admitted: null, diff: null, ca_estimated: null, status: '未公布', source_type: '', source_url: '', last_updated: '', verified: false },
+      { school_id: '4020', school_name: '五邑工商總會學校', type: '資助', religion: '無', linked_sec: '', total_quota: null, dp_quota: null, dp_admitted: null, diff: null, ca_estimated: null, status: '未公布', source_type: '', source_url: '', last_updated: '', verified: false }
+    ];
+
+    // =========================================================================
+    // 2. APPLICATION STATE
+    // =========================================================================
     const state = {
       activeYear: '2027',
-      chartMode: 'diff', // 'diff' | 'compare'
+      chartMode: 'diff', // 'diff' | 'ca'
+      search: '',
+      type: 'all',
+      religion: 'all',
+      status: 'all',
       verifiedOnly: false,
-      isLive2027: false,
-      isLive2026: false,
+      sort: 'announced_first',
       data: {
         '2027': [...DEFAULT_DATA_2027],
         '2026': [...DEFAULT_DATA_2026]
       },
-      filters: {
-        search: '',
-        type: 'all',
-        religion: 'all',
-        status: 'all',
-        sort: 'id_asc'
+      syncStatus: {
+        '2027': { mode: 'static', lastSync: '2026-11-23' },
+        '2026': { mode: 'static', lastSync: '2026-01-15' }
       },
       chartInstance: null
     };
 
     // =========================================================================
-    // 3. UTILITY FUNCTIONS
+    // 3. SECURITY & HELPER UTILITIES
     // =========================================================================
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toastContainer');
-      const colors = {
-        success: 'bg-emerald-600 text-white',
-        error: 'bg-rose-600 text-white',
-        info: 'bg-[#1e3a5f] text-white'
-      };
-      const toast = document.createElement('div');
-      toast.className = `pointer-events-auto px-4 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center justify-between gap-3 transition-all duration-300 translate-y-2 opacity-0 ${colors[type] || colors.info}`;
-      toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
-      container.appendChild(toast);
-
-      requestAnimationFrame(() => {
-        toast.classList.remove('translate-y-2', 'opacity-0');
-      });
-
-      setTimeout(() => {
-        toast.classList.add('translate-y-2', 'opacity-0');
-        setTimeout(() => toast.remove(), 300);
-      }, 3500);
-    }
-
-    function escapeHtml(str) {
-      if (str === null || str === undefined) return '';
-      return String(str)
+    function escapeHtml(value) {
+      if (value === null || value === undefined) return '';
+      return String(value)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -533,25 +447,68 @@
         .replace(/'/g, '&#39;');
     }
 
+    function isSafeUrl(url) {
+      if (!url || typeof url !== 'string') return false;
+      const trimmed = url.trim();
+      return trimmed.startsWith('https://') || trimmed.startsWith('http://');
+    }
+
+    function formatNowTime() {
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const colorMap = {
+        success: 'bg-emerald-700 text-white border-emerald-600',
+        warning: 'bg-amber-600 text-white border-amber-500',
+        error: 'bg-rose-700 text-white border-rose-600',
+        info: 'bg-[#1e3a5f] text-white border-navy-600'
+      };
+      const toast = document.createElement('div');
+      toast.className = `pointer-events-auto px-4 py-3 rounded-xl shadow-lg border text-xs sm:text-sm font-medium transition-all duration-300 opacity-0 translate-y-2 ${colorMap[type] || colorMap.info}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('opacity-0', 'translate-y-2');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3600);
+    }
+
+    function getEffectiveCsvUrls() {
+      // 唯讀模式：僅讀取管理員於 APP_CONFIG 設定的公開 CSV 連結，不允許訪客覆寫
+      return {
+        url2027: (APP_CONFIG.DEFAULT_CSV_2027 || '').trim(),
+        url2026: (APP_CONFIG.DEFAULT_CSV_2026 || '').trim()
+      };
+    }
+
+    // =========================================================================
+    // 4. CSV FETCH & DATA NORMALIZATION
+    // =========================================================================
     function parseNum(val) {
       if (val === null || val === undefined) return null;
       const cleaned = String(val).trim();
-      if (cleaned === '') return null;
+      if (cleaned === '' || cleaned === '-' || cleaned.toLowerCase() === 'null' || cleaned.toLowerCase() === 'nan') {
+        return null;
+      }
       const num = Number(cleaned);
-      return Number.isNaN(num) ? null : num;
+      return Number.isFinite(num) ? num : null;
     }
 
     function parseBool(val) {
       if (typeof val === 'boolean') return val;
-      if (val === null || val === undefined) return false;
-      const s = String(val).trim().toUpperCase();
-      return s === 'TRUE' || s === '1' || s === 'YES';
+      const cleaned = String(val || '').trim().toUpperCase();
+      return cleaned === 'TRUE' || cleaned === '1' || cleaned === 'YES';
     }
 
-    /**
-     * Normalize a row parsed from Google Sheets CSV so diff, ca_estimated, and status
-     * are always consistent even if formula cells were blank.
-     */
     function normalizeRow(raw) {
       const totalQuota = parseNum(raw.total_quota);
       const dpQuota = parseNum(raw.dp_quota);
@@ -567,26 +524,29 @@
         caEstimated = totalQuota - dpAdmitted;
       }
 
-      let status = raw.status ? String(raw.status).trim() : '';
+      let status = String(raw.status || '').trim();
       if (!status) {
-        if (dpAdmitted === null) status = '未公布';
-        else if (diff > 0) status = '超收';
-        else if (diff === 0) status = '滿額';
-        else status = '有餘額';
+        if (dpAdmitted === null) {
+          status = '未公布';
+        } else if (dpQuota !== null) {
+          status = dpAdmitted > dpQuota ? '超收' : (dpAdmitted === dpQuota ? '滿額' : '有餘額');
+        } else {
+          status = '已公布';
+        }
       }
 
       return {
-        school_id: parseNum(raw.school_id) ?? String(raw.school_id || '').trim(),
+        school_id: String(raw.school_id || '').trim(),
         school_name: String(raw.school_name || '').trim(),
         type: String(raw.type || '').trim(),
-        religion: String(raw.religion || '').trim(),
+        religion: String(raw.religion || '').trim() || '無',
         linked_sec: String(raw.linked_sec || '').trim(),
         total_quota: totalQuota,
         dp_quota: dpQuota,
         dp_admitted: dpAdmitted,
-        diff,
+        diff: diff,
         ca_estimated: caEstimated,
-        status,
+        status: status,
         source_type: String(raw.source_type || '').trim(),
         source_url: String(raw.source_url || '').trim(),
         last_updated: String(raw.last_updated || '').trim(),
@@ -594,25 +554,27 @@
       };
     }
 
-    function fetchCsvData(url) {
+    async function fetchCsvData(csvUrl) {
+      const sep = csvUrl.includes('?') ? '&' : '?';
+      const bustUrl = `${csvUrl}${sep}t=${Date.now()}`;
+      const res = await fetch(bustUrl, { cache: 'no-store' });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      const csvText = await res.text();
       return new Promise((resolve, reject) => {
-        Papa.parse(url, {
-          download: true,
+        Papa.parse(csvText, {
           header: true,
           skipEmptyLines: true,
           complete: (results) => {
-            if (!results.data || results.data.length === 0) {
-              reject(new Error('CSV 內容為空或格式不正確'));
-              return;
-            }
-            const normalized = results.data
+            const rows = (results.data || [])
               .map(normalizeRow)
-              .filter(r => r.school_name !== '');
-            if (normalized.length === 0) {
-              reject(new Error('找不到有效的 school_name 欄位，請檢查工作表格式'));
+              .filter((r) => r.school_id && r.school_name);
+            if (!rows.length) {
+              reject(new Error('CSV 內容為空或欄位格式不符'));
               return;
             }
-            resolve(normalized);
+            resolve(rows);
           },
           error: (err) => reject(err)
         });
@@ -620,299 +582,269 @@
     }
 
     // =========================================================================
-    // 4. DATA FILTERING & SORTING
+    // 5. FILTERING, SORTING & RENDERING
     // =========================================================================
-    function getBaseYearData(year) {
-      const rows = state.data[year] || [];
-      return rows.filter(row => {
-        if (state.verifiedOnly) {
-          return row.verified === true;
-        }
-        // Default: show verified rows OR unannounced rows
-        return row.verified === true || row.status === '未公布' || row.dp_admitted === null;
+    function get2026LookupMap() {
+      const map = new Map();
+      (state.data['2026'] || []).forEach((row) => {
+        map.set(String(row.school_id), row);
       });
+      return map;
     }
 
     function getFilteredSortedData() {
-      const base = getBaseYearData(state.activeYear);
-      const q = state.filters.search.trim().toLowerCase();
+      const rows = state.data[state.activeYear] || [];
+      const keyword = state.search.trim().toLowerCase();
 
-      const filtered = base.filter(row => {
-        if (q) {
-          const haystack = `${row.school_name} ${row.linked_sec} ${row.school_id}`.toLowerCase();
-          if (!haystack.includes(q)) return false;
+      const filtered = rows.filter((row) => {
+        if (state.type !== 'all' && row.type !== state.type) return false;
+        if (state.religion !== 'all' && row.religion !== state.religion) return false;
+        if (state.status !== 'all' && row.status !== state.status) return false;
+        if (state.verifiedOnly && !row.verified) return false;
+        if (keyword) {
+          const hay = `${row.school_id} ${row.school_name} ${row.linked_sec}`.toLowerCase();
+          if (!hay.includes(keyword)) return false;
         }
-        if (state.filters.type !== 'all' && row.type !== state.filters.type) return false;
-        if (state.filters.religion !== 'all' && row.religion !== state.filters.religion) return false;
-        if (state.filters.status !== 'all' && row.status !== state.filters.status) return false;
         return true;
       });
 
-      const sortMode = state.filters.sort;
-      return [...filtered].sort((a, b) => {
-        if (sortMode === 'id_asc') {
-          return Number(a.school_id) - Number(b.school_id);
+      const isAnnounced = (r) => r.dp_admitted !== null && r.status !== '未公布';
+
+      filtered.sort((a, b) => {
+        if (state.sort === 'announced_first') {
+          const aAnn = isAnnounced(a) ? 0 : 1;
+          const bAnn = isAnnounced(b) ? 0 : 1;
+          if (aAnn !== bAnn) return aAnn - bAnn;
+          const aDiff = a.diff !== null ? a.diff : -999;
+          const bDiff = b.diff !== null ? b.diff : -999;
+          if (bDiff !== aDiff) return bDiff - aDiff;
+          return a.school_id.localeCompare(b.school_id);
         }
-        if (sortMode === 'diff_desc') {
-          const av = a.diff === null ? -9999 : a.diff;
-          const bv = b.diff === null ? -9999 : b.diff;
-          if (bv !== av) return bv - av;
-          return Number(a.school_id) - Number(b.school_id);
+        if (state.sort === 'diff_desc') {
+          const aVal = a.diff !== null ? a.diff : -9999;
+          const bVal = b.diff !== null ? b.diff : -9999;
+          return bVal - aVal || a.school_id.localeCompare(b.school_id);
         }
-        if (sortMode === 'diff_asc') {
-          const av = a.diff === null ? 9999 : a.diff;
-          const bv = b.diff === null ? 9999 : b.diff;
-          if (av !== bv) return av - bv;
-          return Number(a.school_id) - Number(b.school_id);
+        if (state.sort === 'diff_asc') {
+          const aVal = a.diff !== null ? a.diff : 9999;
+          const bVal = b.diff !== null ? b.diff : 9999;
+          return aVal - bVal || a.school_id.localeCompare(b.school_id);
         }
-        if (sortMode === 'ca_desc') {
-          const av = a.ca_estimated === null ? -9999 : a.ca_estimated;
-          const bv = b.ca_estimated === null ? -9999 : b.ca_estimated;
-          if (bv !== av) return bv - av;
-          return Number(a.school_id) - Number(b.school_id);
+        if (state.sort === 'ca_desc') {
+          const aVal = a.ca_estimated !== null ? a.ca_estimated : -9999;
+          const bVal = b.ca_estimated !== null ? b.ca_estimated : -9999;
+          return bVal - aVal || a.school_id.localeCompare(b.school_id);
         }
-        return 0;
+        return a.school_id.localeCompare(b.school_id);
       });
+
+      return filtered;
     }
 
-    function find2026Reference(row) {
-      const list2026 = state.data['2026'] || [];
-      return list2026.find(item =>
-        (item.school_id && String(item.school_id) === String(row.school_id)) ||
-        item.school_name === row.school_name
-      );
-    }
-
-    // =========================================================================
-    // 5. RENDERING: KPI CARDS, CHART, TABLE & MOBILE CARDS
-    // =========================================================================
-    function renderHeaderBadges() {
-      const isLive = state.activeYear === '2027' ? state.isLive2027 : state.isLive2026;
+    function renderSyncStatus() {
+      const info = state.syncStatus[state.activeYear] || { mode: 'static', lastSync: '--' };
       const badge = document.getElementById('dataSourceBadge');
-      const syncInfo = document.getElementById('lastSyncInfo');
+      const dot = document.getElementById('syncDot');
+      const statusText = document.getElementById('syncStatusText');
+      const lastSyncEl = document.getElementById('lastSyncTime');
 
-      if (isLive) {
+      if (info.mode === 'live') {
         badge.textContent = 'Google Sheets 即時同步';
-        badge.className = 'text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/25 text-emerald-100 border border-emerald-300/40';
-        syncInfo.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span>資料來源：Google Sheets CSV（${state.activeYear} 年度）`;
+        badge.className = 'text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/25 text-emerald-100 border border-emerald-300/30';
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0';
+        statusText.textContent = '已連接 Google Sheets 即時數據';
+        lastSyncEl.textContent = `最後同步：${info.lastSync}`;
+      } else if (info.mode === 'fallback') {
+        badge.textContent = '已儲存資料';
+        badge.className = 'text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-500/25 text-amber-100 border border-amber-300/30';
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0';
+        statusText.textContent = '即時同步暫時未能連線，目前顯示已儲存資料';
+        lastSyncEl.textContent = `資料最後更新：${info.lastSync}`;
       } else {
-        badge.textContent = '內建快照模式';
+        badge.textContent = '最新整理資料';
         badge.className = 'text-[11px] font-medium px-2 py-0.5 rounded-full bg-sky-500/25 text-sky-100 border border-sky-300/30';
-        const snapDate = state.activeYear === '2027' ? '2026-11-23' : '2026-01-15';
-        syncInfo.innerHTML = `<span class="w-2 h-2 rounded-full bg-sky-500"></span>資料來源：內建快照（${snapDate}）`;
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-sky-500 shrink-0';
+        statusText.textContent = '目前顯示最新整理資料';
+        lastSyncEl.textContent = `資料最後更新：${info.lastSync}`;
       }
     }
 
     function renderKPIs() {
-      const allRows = state.data[state.activeYear] || [];
-      const total = allRows.length;
-      const announcedRows = allRows.filter(r => r.dp_admitted !== null && r.status !== '未公布');
-      const overRows = announcedRows.filter(r => r.diff > 0);
-      const fullRows = announcedRows.filter(r => r.diff === 0);
-      const surplusRows = announcedRows.filter(r => r.diff < 0);
+      const rows = state.data[state.activeYear] || [];
+      const total = rows.length;
+      const announcedRows = rows.filter((r) => r.dp_admitted !== null && r.status !== '未公布');
+      const announcedCount = announcedRows.length;
+      const pct = total > 0 ? Math.round((announcedCount / total) * 100) : 0;
 
-      const pct = total > 0 ? Math.round((announcedRows.length / total) * 100) : 0;
-      const totalOverNum = overRows.reduce((sum, r) => sum + (r.diff || 0), 0);
-      const totalSurplusNum = surplusRows.reduce((sum, r) => sum + Math.abs(r.diff || 0), 0);
+      const overRows = announcedRows.filter((r) => r.diff !== null && r.diff > 0);
+      const fullRows = announcedRows.filter((r) => r.diff !== null && r.diff === 0);
+      const surplusRows = announcedRows.filter((r) => r.diff !== null && r.diff < 0);
 
-      document.getElementById('kpiAnnounced').textContent = `${announcedRows.length} / ${total}`;
+      const totalOverNum = overRows.reduce((sum, r) => sum + r.diff, 0);
+      const totalSurplusNum = surplusRows.reduce((sum, r) => sum + Math.abs(r.diff), 0);
+
+      document.getElementById('kpiAnnounced').textContent = `${announcedCount} / ${total}`;
       document.getElementById('kpiProgressBar').style.width = `${pct}%`;
-      document.getElementById('kpiProgressPct').textContent = `${pct}% 已公布`;
+      document.getElementById('kpiProgressPct').textContent = `${pct}%`;
 
-      document.getElementById('kpiOver').textContent = overRows.length;
+      document.getElementById('kpiOver').textContent = String(overRows.length);
       document.getElementById('kpiOverSub').textContent = `總超收人數：+${totalOverNum} 人`;
 
-      document.getElementById('kpiFull').textContent = fullRows.length;
+      document.getElementById('kpiFull').textContent = String(fullRows.length);
 
-      document.getElementById('kpiSurplus').textContent = surplusRows.length;
+      document.getElementById('kpiSurplus').textContent = String(surplusRows.length);
       document.getElementById('kpiSurplusSub').textContent = `撥回大抽獎餘額：${totalSurplusNum} 個`;
     }
 
     function renderChart(filteredRows) {
-      const announced = filteredRows.filter(r => r.dp_admitted !== null && r.diff !== null);
       const wrapper = document.getElementById('chartWrapper');
-      const emptyState = document.getElementById('chartEmptyState');
-      const diffLegend = document.getElementById('diffLegend');
+      const emptyEl = document.getElementById('chartEmptyState');
+      const canvas = document.getElementById('schoolChart');
 
-      if (announced.length === 0) {
+      const chartRows = filteredRows.filter((r) => {
+        if (r.dp_admitted === null || r.status === '未公布') return false;
+        return state.chartMode === 'diff' ? r.diff !== null : r.ca_estimated !== null;
+      });
+
+      if (state.chartInstance) {
+        state.chartInstance.destroy();
+        state.chartInstance = null;
+      }
+
+      if (!chartRows.length) {
         wrapper.classList.add('hidden');
-        diffLegend.classList.add('hidden');
-        emptyState.classList.remove('hidden');
-        if (state.chartInstance) {
-          state.chartInstance.destroy();
-          state.chartInstance = null;
-        }
+        emptyEl.classList.remove('hidden');
         return;
       }
 
       wrapper.classList.remove('hidden');
-      emptyState.classList.add('hidden');
+      emptyEl.classList.add('hidden');
 
-      // Dynamic height so horizontal bars remain readable
-      const barRowHeight = state.chartMode === 'diff' ? 32 : 40;
-      const dynamicHeight = Math.max(240, announced.length * barRowHeight + 60);
+      const dynamicHeight = Math.max(280, chartRows.length * 32 + 60);
       wrapper.style.height = `${dynamicHeight}px`;
 
-      const labels = announced.map(r => r.school_name.replace('中華基督教會', 'CCC ').replace('（小學部）', ''));
+      const labels = chartRows.map((r) => r.school_name);
+      const values = chartRows.map((r) => (state.chartMode === 'diff' ? r.diff : r.ca_estimated));
+      const bgColors = chartRows.map((r) => {
+        if (r.diff > 0) return 'rgba(244, 63, 94, 0.85)';
+        if (r.diff === 0) return 'rgba(99, 102, 241, 0.85)';
+        return 'rgba(16, 185, 129, 0.85)';
+      });
 
-      if (state.chartInstance) {
-        state.chartInstance.destroy();
-      }
-
-      const ctx = document.getElementById('schoolChart').getContext('2d');
-
-      if (state.chartMode === 'diff') {
-        diffLegend.classList.remove('hidden');
-        const values = announced.map(r => r.diff);
-        const bgColors = values.map(v => v > 0 ? '#ef4444' : (v === 0 ? '#6366f1' : '#10b981'));
-
-        state.chartInstance = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels,
-            datasets: [{
-              label: '超收／剩餘學額 (diff)',
-              data: values,
-              backgroundColor: bgColors,
-              borderRadius: 6,
-              barPercentage: 0.72
-            }]
-          },
-          options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label: (ctxItem) => {
-                    const row = announced[ctxItem.dataIndex];
-                    const v = row.diff;
-                    const tag = v > 0 ? `超收 +${v} 人` : (v === 0 ? '滿額 (0)' : `有餘額 ${v} 個`);
-                    return ` ${tag}（暫定 ${row.dp_quota} / 實收 ${row.dp_admitted}）`;
+      state.chartInstance = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: state.chartMode === 'diff' ? '超收／剩餘學額' : '預計統一派位學額',
+            data: values,
+            backgroundColor: bgColors,
+            borderRadius: 6,
+            maxBarThickness: 22
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const row = chartRows[ctx.dataIndex];
+                  if (state.chartMode === 'diff') {
+                    const sign = row.diff > 0 ? `+${row.diff}（超收）` : (row.diff === 0 ? '0（滿額）' : `${row.diff}（有餘額）`);
+                    return ` 差額：${sign}｜取錄 ${row.dp_admitted} / 暫定 ${row.dp_quota}`;
                   }
+                  return ` 預計統一派位學額：${row.ca_estimated} 個（總額 ${row.total_quota} − 自行 ${row.dp_admitted}）`;
                 }
               }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: '#f1f5f9' },
+              ticks: {
+                color: '#64748b',
+                font: { size: 11 },
+                callback: (val) => (state.chartMode === 'diff' && val > 0 ? `+${val}` : val)
+              }
             },
-            scales: {
-              x: {
-                grid: { color: '#e2e8f0' },
-                ticks: { color: '#475569', font: { size: 11 } },
-                title: { display: true, text: '正數 = 超收 ｜ 負數 = 撥回大抽獎餘額', color: '#64748b', font: { size: 11 } }
-              },
-              y: {
-                grid: { display: false },
-                ticks: { color: '#1e293b', font: { size: 12, weight: '500' } }
+            y: {
+              grid: { display: false },
+              ticks: {
+                color: '#334155',
+                font: { size: 12, weight: '500' }
               }
             }
           }
-        });
-      } else {
-        diffLegend.classList.add('hidden');
-        state.chartInstance = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels,
-            datasets: [
-              {
-                label: '暫定自行學額',
-                data: announced.map(r => r.dp_quota),
-                backgroundColor: '#94a3b8',
-                borderRadius: 5,
-                barPercentage: 0.8
-              },
-              {
-                label: '實際取錄人數',
-                data: announced.map(r => r.dp_admitted),
-                backgroundColor: announced.map(r => r.diff > 0 ? '#ef4444' : (r.diff === 0 ? '#6366f1' : '#10b981')),
-                borderRadius: 5,
-                barPercentage: 0.8
-              }
-            ]
-          },
-          options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                display: true,
-                position: 'top',
-                labels: { boxWidth: 12, font: { size: 12 } }
-              },
-              tooltip: {
-                callbacks: {
-                  afterBody: (items) => {
-                    const row = announced[items[0].dataIndex];
-                    return `預計大抽獎學額：${row.ca_estimated ?? '-'}`;
-                  }
-                }
-              }
-            },
-            scales: {
-              x: {
-                beginAtZero: true,
-                grid: { color: '#e2e8f0' },
-                ticks: { color: '#475569', font: { size: 11 } }
-              },
-              y: {
-                grid: { display: false },
-                ticks: { color: '#1e293b', font: { size: 12, weight: '500' } }
-              }
-            }
-          }
-        });
-      }
+        }
+      });
     }
 
     function getDiffBadgeHtml(diff) {
       if (diff === null || diff === undefined) {
-        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-400">—</span>`;
+        return `<span class="text-slate-400 text-xs">--</span>`;
       }
       if (diff > 0) {
-        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700">+${diff}</span>`;
+        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">+${diff} 超收</span>`;
       }
       if (diff === 0) {
-        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700">0</span>`;
+        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">0 滿額</span>`;
       }
-      return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">${diff}</span>`;
+      return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">${diff} 餘額</span>`;
     }
 
     function getStatusBadgeHtml(status) {
       const map = {
-        '超收': 'bg-rose-50 text-rose-700 border-rose-200',
-        '滿額': 'bg-indigo-50 text-indigo-700 border-indigo-200',
-        '有餘額': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-        '未公布': 'bg-slate-100 text-slate-500 border-slate-200'
+        '超收': 'bg-rose-100 text-rose-800',
+        '滿額': 'bg-indigo-100 text-indigo-800',
+        '有餘額': 'bg-emerald-100 text-emerald-800',
+        '未公布': 'bg-slate-100 text-slate-600'
       };
-      const cls = map[status] || map['未公布'];
-      return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${cls}">${escapeHtml(status)}</span>`;
+      const cls = map[status] || 'bg-slate-100 text-slate-600';
+      return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${cls}">${escapeHtml(status)}</span>`;
     }
 
-    function get2026RefHtml(row) {
-      if (state.activeYear !== '2027' || row.status !== '未公布') return '';
-      const ref = find2026Reference(row);
-      if (!ref || ref.dp_admitted === null) return '';
-
-      let diffText = '';
-      if (ref.diff > 0) diffText = `超收 +${ref.diff}`;
-      else if (ref.diff === 0) diffText = '滿額 0';
-      else diffText = `餘額 ${Math.abs(ref.diff)}`;
-
+    function getYoYBadgeHtml(row, map2026) {
+      const prev = map2026.get(String(row.school_id));
+      if (!prev || prev.diff === null) {
+        return `<span class="text-xs text-slate-400">--</span>`;
+      }
+      if (row.diff === null || row.status === '未公布') {
+        const prevDiffStr = prev.diff > 0 ? `+${prev.diff}` : String(prev.diff);
+        return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200 whitespace-nowrap">2026 參考：收 ${prev.dp_admitted}（${prevDiffStr}）</span>`;
+      }
+      const delta = row.diff - prev.diff;
+      if (delta < 0) {
+        return `
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap" title="2026 差額：${prev.diff} → 2027 差額：${row.diff}">
+            ↓ ${Math.abs(delta)} 競爭紓緩
+          </span>
+        `;
+      }
+      if (delta > 0) {
+        return `
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 whitespace-nowrap" title="2026 差額：${prev.diff} → 2027 差額：${row.diff}">
+            ↑ ${delta} 超收增加
+          </span>
+        `;
+      }
       return `
-        <div class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[11px] font-medium border border-slate-200/80">
-          <span>2026 參考：收 ${ref.dp_admitted} 人（${diffText}）</span>
-        </div>
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200 whitespace-nowrap">
+          → 持平
+        </span>
       `;
     }
 
-    function getSourceHtml(row) {
-      if (!row.source_type && !row.source_url && !row.last_updated) {
-        return `<span class="text-xs text-slate-400">待更新</span>`;
+    function getSourceOrActionHtml(row) {
+      if (row.status === '未公布' || row.dp_admitted === null) {
+        return `<span class="text-xs text-slate-400">待官方公布</span>`;
       }
+
       const label = row.source_type || '官方來源';
-      const linkPart = row.source_url
+      const linkPart = isSafeUrl(row.source_url)
         ? `<a href="${escapeHtml(row.source_url)}" target="_blank" rel="noopener noreferrer" class="text-xs font-medium text-[#1e3a5f] hover:underline inline-flex items-center gap-1">${escapeHtml(label)}<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>`
         : `<span class="text-xs font-medium text-slate-600">${escapeHtml(label)}</span>`;
       const datePart = row.last_updated
@@ -922,98 +854,122 @@
     }
 
     function renderList(rows) {
-      document.getElementById('resultCount').textContent = rows.length;
       const tbody = document.getElementById('desktopTableBody');
       const mobileList = document.getElementById('mobileCardList');
-      const emptyState = document.getElementById('listEmptyState');
+      const emptyEl = document.getElementById('listEmptyState');
+      const yoyHeader = document.getElementById('yoyColHeader');
+      const showYoY = state.activeYear === '2027';
+      const map2026 = get2026LookupMap();
 
-      if (rows.length === 0) {
+      document.getElementById('resultCount').textContent = String(rows.length);
+      yoyHeader.classList.toggle('hidden', !showYoY);
+
+      if (!rows.length) {
         tbody.innerHTML = '';
         mobileList.innerHTML = '';
-        emptyState.classList.remove('hidden');
+        emptyEl.classList.remove('hidden');
         return;
       }
 
-      emptyState.classList.add('hidden');
+      emptyEl.classList.add('hidden');
 
-      // Desktop rows
-      tbody.innerHTML = rows.map(row => {
-        const linkedBadge = row.linked_sec
-          ? `<span class="ml-1.5 inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200">${escapeHtml(row.linked_sec)}</span>`
+      const fmtNum = (n) => (n !== null && n !== undefined ? String(n) : '<span class="text-slate-300">--</span>');
+
+      // Desktop Table Rows
+      tbody.innerHTML = rows.map((row) => {
+        const verifiedBadge = row.verified
+          ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200" title="已核實數據">✓ 已核實</span>`
           : '';
-        const ref2026 = get2026RefHtml(row);
+        const linkedBadge = row.linked_sec
+          ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-200">${escapeHtml(row.linked_sec)}</span>`
+          : '';
 
         return `
-          <tr class="hover:bg-slate-50/90 transition">
+          <tr class="hover:bg-slate-50/80 transition">
             <td class="py-3.5 px-4">
-              <div class="font-semibold text-slate-800 flex flex-wrap items-center gap-y-1">
-                <span>${escapeHtml(row.school_name)}</span>
-                ${linkedBadge}
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-[11px] font-mono text-slate-400">${escapeHtml(row.school_id)}</span>
+                <span class="font-semibold text-slate-900">${escapeHtml(row.school_name)}</span>
+                ${verifiedBadge}
               </div>
-              ${ref2026}
+              ${linkedBadge ? `<div class="mt-1">${linkedBadge}</div>` : ''}
             </td>
             <td class="py-3.5 px-3 text-xs text-slate-600 whitespace-nowrap">
-              <span class="font-medium text-slate-700">${escapeHtml(row.type || '-')}</span>
-              <span class="text-slate-300 mx-1">/</span>
-              <span>${escapeHtml(row.religion || '-')}</span>
+              <div>${escapeHtml(row.type)}</div>
+              <div class="text-slate-400">${escapeHtml(row.religion)}</div>
             </td>
-            <td class="py-3.5 px-3 text-right font-medium text-slate-700 tabular-nums">${row.total_quota ?? '<span class="text-slate-300">-</span>'}</td>
-            <td class="py-3.5 px-3 text-right font-medium text-slate-700 tabular-nums">${row.dp_quota ?? '<span class="text-slate-300">-</span>'}</td>
-            <td class="py-3.5 px-3 text-right font-bold text-[#1e3a5f] tabular-nums">${row.dp_admitted ?? '<span class="text-slate-300 font-normal">-</span>'}</td>
-            <td class="py-3.5 px-3 text-center tabular-nums">${getDiffBadgeHtml(row.diff)}</td>
-            <td class="py-3.5 px-3 text-right font-semibold text-slate-800 tabular-nums">${row.ca_estimated ?? '<span class="text-slate-300 font-normal">-</span>'}</td>
-            <td class="py-3.5 px-3 text-center whitespace-nowrap">${getStatusBadgeHtml(row.status)}</td>
-            <td class="py-3.5 px-4 text-right whitespace-nowrap">${getSourceHtml(row)}</td>
+            <td class="py-3.5 px-3 text-right font-medium text-slate-700 tabular-nums">${fmtNum(row.total_quota)}</td>
+            <td class="py-3.5 px-3 text-right font-medium text-slate-700 tabular-nums">${fmtNum(row.dp_quota)}</td>
+            <td class="py-3.5 px-3 text-right font-bold text-[#1e3a5f] tabular-nums">${fmtNum(row.dp_admitted)}</td>
+            <td class="py-3.5 px-3 text-center">${getDiffBadgeHtml(row.diff)}</td>
+            ${showYoY ? `<td class="py-3.5 px-3 text-center">${getYoYBadgeHtml(row, map2026)}</td>` : ''}
+            <td class="py-3.5 px-3 text-right font-semibold text-slate-800 tabular-nums">${fmtNum(row.ca_estimated)}</td>
+            <td class="py-3.5 px-3 text-center">${getStatusBadgeHtml(row.status)}</td>
+            <td class="py-3.5 px-4 text-right">${getSourceOrActionHtml(row)}</td>
           </tr>
         `;
       }).join('');
 
-      // Mobile cards
-      mobileList.innerHTML = rows.map(row => {
+      // Mobile Cards
+      mobileList.innerHTML = rows.map((row) => {
+        const verifiedBadge = row.verified
+          ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">✓ 已核實</span>`
+          : '';
         const linkedBadge = row.linked_sec
           ? `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200">${escapeHtml(row.linked_sec)}</span>`
           : '';
-        const ref2026 = get2026RefHtml(row);
 
         return `
           <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 space-y-3">
             <div class="flex items-start justify-between gap-2">
-              <div class="space-y-1">
-                <h3 class="font-bold text-slate-800 text-sm leading-snug">${escapeHtml(row.school_name)}</h3>
-                <div class="flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
-                  <span>${escapeHtml(row.type || '-')} · ${escapeHtml(row.religion || '-')}</span>
+              <div>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-[11px] font-mono text-slate-400">${escapeHtml(row.school_id)}</span>
+                  <h3 class="font-bold text-slate-900 text-sm">${escapeHtml(row.school_name)}</h3>
+                  ${verifiedBadge}
+                </div>
+                <div class="flex items-center gap-2 mt-1 text-xs text-slate-500 flex-wrap">
+                  <span>${escapeHtml(row.type)}</span>
+                  <span>·</span>
+                  <span>${escapeHtml(row.religion)}</span>
                   ${linkedBadge}
                 </div>
-                ${ref2026}
               </div>
               <div class="shrink-0">${getStatusBadgeHtml(row.status)}</div>
             </div>
 
-            <div class="grid grid-cols-4 gap-2 bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100">
+            <div class="grid grid-cols-4 gap-2 bg-slate-50 rounded-xl p-2.5 text-center">
               <div>
-                <div class="text-[11px] text-slate-400">總學額</div>
-                <div class="text-sm font-semibold text-slate-700 tabular-nums">${row.total_quota ?? '-'}</div>
+                <div class="text-[10px] text-slate-500">總學額</div>
+                <div class="text-sm font-semibold text-slate-700 tabular-nums mt-0.5">${fmtNum(row.total_quota)}</div>
               </div>
               <div>
-                <div class="text-[11px] text-slate-400">暫定自行</div>
-                <div class="text-sm font-semibold text-slate-700 tabular-nums">${row.dp_quota ?? '-'}</div>
+                <div class="text-[10px] text-slate-500">暫定自行</div>
+                <div class="text-sm font-semibold text-slate-700 tabular-nums mt-0.5">${fmtNum(row.dp_quota)}</div>
               </div>
               <div>
-                <div class="text-[11px] text-slate-400">實際取錄</div>
-                <div class="text-sm font-bold text-[#1e3a5f] tabular-nums">${row.dp_admitted ?? '-'}</div>
+                <div class="text-[10px] text-slate-500">實際取錄</div>
+                <div class="text-sm font-bold text-[#1e3a5f] tabular-nums mt-0.5">${fmtNum(row.dp_admitted)}</div>
               </div>
               <div>
-                <div class="text-[11px] text-slate-400">大抽獎額</div>
-                <div class="text-sm font-bold text-slate-800 tabular-nums">${row.ca_estimated ?? '-'}</div>
+                <div class="text-[10px] text-slate-500">預計大抽獎</div>
+                <div class="text-sm font-bold text-slate-800 tabular-nums mt-0.5">${fmtNum(row.ca_estimated)}</div>
               </div>
             </div>
 
-            <div class="flex items-center justify-between pt-1 text-xs">
+            ${showYoY ? `
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-500">較去年變化：</span>
+                <div>${getYoYBadgeHtml(row, map2026)}</div>
+              </div>
+            ` : ''}
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
               <div class="flex items-center gap-1.5">
                 <span class="text-slate-500">超收／剩餘：</span>
                 ${getDiffBadgeHtml(row.diff)}
               </div>
-              <div class="text-right">${getSourceHtml(row)}</div>
+              <div class="text-right">${getSourceOrActionHtml(row)}</div>
             </div>
           </div>
         `;
@@ -1021,7 +977,7 @@
     }
 
     function renderAll() {
-      renderHeaderBadges();
+      renderSyncStatus();
       renderKPIs();
       const filteredRows = getFilteredSortedData();
       renderChart(filteredRows);
@@ -1029,198 +985,139 @@
     }
 
     // =========================================================================
-    // 6. EVENT LISTENERS & GOOGLE SHEETS SYNC LOGIC
+    // 6. SYNC CONTROLLER & EVENT LISTENERS (唯讀模式)
     // =========================================================================
-    function openModal() {
-      const modal = document.getElementById('settingsModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      document.getElementById('syncStatusBox').classList.add('hidden');
-    }
+    async function syncAllConfiguredCsvs(showFeedback = false) {
+      const { url2027, url2026 } = getEffectiveCsvUrls();
+      const refreshIcon = document.getElementById('refreshIcon');
 
-    function closeModal() {
-      const modal = document.getElementById('settingsModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
-
-    async function syncFromCsvUrls(url2027, url2026, silent = false) {
-      const spinner = document.getElementById('syncSpinner');
-      const statusBox = document.getElementById('syncStatusBox');
-      spinner.classList.remove('hidden');
+      refreshIcon.classList.add('animate-spin');
 
       const messages = [];
       let hasError = false;
+      const nowStr = formatNowTime();
 
+      // Sync 2027
       if (url2027) {
         try {
           const rows2027 = await fetchCsvData(url2027);
           state.data['2027'] = rows2027;
-          state.isLive2027 = true;
-          messages.push(`2027 年度同步成功（共 ${rows2027.length} 間學校）`);
+          state.syncStatus['2027'] = { mode: 'live', lastSync: nowStr };
+          messages.push(`2027 年度同步成功（共 ${rows2027.length} 間）`);
         } catch (err) {
           hasError = true;
-          messages.push(`2027 年度讀取失敗：${err.message || '請確認連結已發佈為 CSV'}`);
+          state.data['2027'] = [...DEFAULT_DATA_2027];
+          state.syncStatus['2027'] = { mode: 'fallback', lastSync: '2026-11-23' };
+          messages.push(`2027 年度即時同步暫時未能連線，目前顯示已儲存資料（${err.message || '連線錯誤'}）`);
         }
       } else {
         state.data['2027'] = [...DEFAULT_DATA_2027];
-        state.isLive2027 = false;
+        state.syncStatus['2027'] = { mode: 'static', lastSync: '2026-11-23' };
       }
 
+      // Sync 2026
       if (url2026) {
         try {
           const rows2026 = await fetchCsvData(url2026);
           state.data['2026'] = rows2026;
-          state.isLive2026 = true;
-          messages.push(`2026 年度同步成功（共 ${rows2026.length} 間學校）`);
+          state.syncStatus['2026'] = { mode: 'live', lastSync: nowStr };
+          messages.push(`2026 年度同步成功（共 ${rows2026.length} 間）`);
         } catch (err) {
           hasError = true;
-          messages.push(`2026 年度讀取失敗：${err.message || '請確認連結已發佈為 CSV'}`);
+          state.data['2026'] = [...DEFAULT_DATA_2026];
+          state.syncStatus['2026'] = { mode: 'fallback', lastSync: '2026-01-15' };
+          messages.push(`2026 年度即時同步暫時未能連線，目前顯示已儲存資料（${err.message || '連線錯誤'}）`);
         }
       } else {
         state.data['2026'] = [...DEFAULT_DATA_2026];
-        state.isLive2026 = false;
+        state.syncStatus['2026'] = { mode: 'static', lastSync: '2026-01-15' };
       }
 
-      spinner.classList.add('hidden');
+      refreshIcon.classList.remove('animate-spin');
       renderAll();
 
-      if (!silent) {
-        if (messages.length === 0) {
-          showToast('已套用設定（目前使用內建快照）', 'info');
-          closeModal();
+      if (showFeedback) {
+        if (!url2027 && !url2026) {
+          showToast('目前顯示最新整理的 2026 / 2027 資料。', 'info');
         } else if (hasError) {
-          statusBox.className = 'rounded-xl p-3 text-sm bg-rose-50 text-rose-700 border border-rose-200';
-          statusBox.innerHTML = messages.map(m => `<div>• ${escapeHtml(m)}</div>`).join('');
-          statusBox.classList.remove('hidden');
-          showToast('部分 CSV 同步失敗，請檢查連結', 'error');
+          showToast('即時同步暫時未能連線，目前顯示已儲存資料', 'warning');
         } else {
           showToast(messages.join('；'), 'success');
-          closeModal();
         }
       }
     }
 
     function initApp() {
-      // Load saved settings from localStorage
-      const saved2027 = localStorage.getItem(STORAGE_KEYS.url2027) || '';
-      const saved2026 = localStorage.getItem(STORAGE_KEYS.url2026) || '';
-      const savedVerifiedOnly = localStorage.getItem(STORAGE_KEYS.verifiedOnly) === 'true';
-
-      document.getElementById('csvUrl2027').value = saved2027;
-      document.getElementById('csvUrl2026').value = saved2026;
-      document.getElementById('verifiedOnlyToggle').checked = savedVerifiedOnly;
-      state.verifiedOnly = savedVerifiedOnly;
-
-      // Modal events
-      document.getElementById('openSettingsBtn').addEventListener('click', openModal);
-      document.getElementById('closeSettingsBtn').addEventListener('click', closeModal);
-      document.getElementById('cancelSettingsBtn').addEventListener('click', closeModal);
-      document.getElementById('settingsModal').addEventListener('click', (e) => {
-        if (e.target.id === 'settingsModal') closeModal();
+      // Top Refresh Button
+      document.getElementById('refreshBtn').addEventListener('click', () => {
+        syncAllConfiguredCsvs(true);
       });
 
-      // Sync button
-      document.getElementById('syncCsvBtn').addEventListener('click', () => {
-        const url2027 = document.getElementById('csvUrl2027').value.trim();
-        const url2026 = document.getElementById('csvUrl2026').value.trim();
-        const verifiedOnly = document.getElementById('verifiedOnlyToggle').checked;
-
-        localStorage.setItem(STORAGE_KEYS.url2027, url2027);
-        localStorage.setItem(STORAGE_KEYS.url2026, url2026);
-        localStorage.setItem(STORAGE_KEYS.verifiedOnly, String(verifiedOnly));
-        state.verifiedOnly = verifiedOnly;
-
-        syncFromCsvUrls(url2027, url2026, false);
-      });
-
-      // Reset to snapshot button
-      document.getElementById('resetSnapshotBtn').addEventListener('click', () => {
-        localStorage.removeItem(STORAGE_KEYS.url2027);
-        localStorage.removeItem(STORAGE_KEYS.url2026);
-        localStorage.setItem(STORAGE_KEYS.verifiedOnly, 'false');
-
-        document.getElementById('csvUrl2027').value = '';
-        document.getElementById('csvUrl2026').value = '';
-        document.getElementById('verifiedOnlyToggle').checked = false;
-
-        state.verifiedOnly = false;
-        state.data['2027'] = [...DEFAULT_DATA_2027];
-        state.data['2026'] = [...DEFAULT_DATA_2026];
-        state.isLive2027 = false;
-        state.isLive2026 = false;
-
-        renderAll();
-        closeModal();
-        showToast('已重設為內建 2026 / 2027 快照數據', 'info');
-      });
-
-      // Year tabs
-      document.querySelectorAll('.year-tab').forEach(btn => {
+      // Year Switcher Tabs
+      document.querySelectorAll('.year-tab').forEach((btn) => {
         btn.addEventListener('click', () => {
-          const yr = btn.dataset.year;
-          if (state.activeYear === yr) return;
-          state.activeYear = yr;
+          const year = btn.dataset.year;
+          if (state.activeYear === year) return;
+          state.activeYear = year;
 
-          document.querySelectorAll('.year-tab').forEach(b => {
-            if (b.dataset.year === yr) {
-              b.className = 'year-tab px-5 py-2.5 rounded-xl text-sm font-bold transition cursor-pointer bg-[#1e3a5f] text-white shadow-sm';
-            } else {
-              b.className = 'year-tab px-5 py-2.5 rounded-xl text-sm font-semibold transition cursor-pointer text-slate-600 hover:text-slate-900';
-            }
+          document.querySelectorAll('.year-tab').forEach((b) => {
+            const isActive = b.dataset.year === year;
+            b.className = isActive
+              ? 'year-tab px-5 py-2.5 rounded-xl text-sm font-bold transition cursor-pointer bg-[#1e3a5f] text-white shadow-sm'
+              : 'year-tab px-5 py-2.5 rounded-xl text-sm font-semibold transition cursor-pointer text-slate-600 hover:text-slate-900';
           });
           renderAll();
         });
       });
 
-      // Chart mode toggle
-      document.querySelectorAll('.chart-mode-btn').forEach(btn => {
+      // Chart Mode Toggle
+      document.querySelectorAll('.chart-mode-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
           const mode = btn.dataset.mode;
           if (state.chartMode === mode) return;
           state.chartMode = mode;
 
-          document.querySelectorAll('.chart-mode-btn').forEach(b => {
-            if (b.dataset.mode === mode) {
-              b.className = 'chart-mode-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer bg-white text-[#1e3a5f] shadow-xs';
-            } else {
-              b.className = 'chart-mode-btn px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer text-slate-600 hover:text-slate-900';
-            }
+          document.querySelectorAll('.chart-mode-btn').forEach((b) => {
+            const isActive = b.dataset.mode === mode;
+            b.className = isActive
+              ? 'chart-mode-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer bg-white text-[#1e3a5f] shadow-xs'
+              : 'chart-mode-btn px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer text-slate-600 hover:text-slate-900';
           });
           renderChart(getFilteredSortedData());
         });
       });
 
-      // Search, Filters & Sort
+      // Search & Filters
       document.getElementById('searchInput').addEventListener('input', (e) => {
-        state.filters.search = e.target.value;
+        state.search = e.target.value;
         renderAll();
       });
       document.getElementById('filterType').addEventListener('change', (e) => {
-        state.filters.type = e.target.value;
+        state.type = e.target.value;
         renderAll();
       });
       document.getElementById('filterReligion').addEventListener('change', (e) => {
-        state.filters.religion = e.target.value;
+        state.religion = e.target.value;
         renderAll();
       });
       document.getElementById('filterStatus').addEventListener('change', (e) => {
-        state.filters.status = e.target.value;
+        state.status = e.target.value;
+        renderAll();
+      });
+      document.getElementById('verifiedOnlyToggle').addEventListener('change', (e) => {
+        state.verifiedOnly = e.target.checked;
         renderAll();
       });
       document.getElementById('sortSelect').addEventListener('change', (e) => {
-        state.filters.sort = e.target.value;
+        state.sort = e.target.value;
         renderAll();
       });
 
-      // Initial render (and auto-sync if user previously saved CSV URLs)
-      renderAll();
-      if (saved2027 || saved2026) {
-        syncFromCsvUrls(saved2027, saved2026, true);
-      }
+      // Initial Sync & Render
+      syncAllConfiguredCsvs(false);
     }
 
-    window.addEventListener('DOMContentLoaded', initApp);
+    document.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
